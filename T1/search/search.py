@@ -17,6 +17,7 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
+import time
 import util
 
 
@@ -139,7 +140,6 @@ def depthFirstSearch(problem):
     print "Is the start a goal?", problem.isGoalState(problem.getStartState())
     print "Start's successors:", problem.expand(problem.getStartState())
     """
-
     node = getStartNode(problem)
     frontier = util.Stack()
     frontier.push(node)
@@ -161,7 +161,6 @@ def depthFirstSearch(problem):
         for sucessor in problem.expand(node['STATE']):
             child_node = getChildNode(sucessor, node)
             frontier.push(child_node)
-
     return []
 
 
@@ -194,7 +193,28 @@ def uniformCostSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    node = getStartNode(problem)
+
+    frontier = util.Queue()
+    closed = set()
+
+    # frontier.push(node)
+    # node = frontier.pop()
+
+    while not problem.isGoalState(node['STATE']):
+
+        if not node['STATE'] in closed:
+            closed.add(node['STATE'])
+            childrens_states = problem.expand(node['STATE'])
+
+            for children_state in childrens_states:
+                children_node = getChildNode(children_state, node)
+                frontier.push(children_node)
+
+        node = frontier.pop()
+
+    return getActionSequence(node)
 
 
 def nullHeuristic(state, problem=None):
@@ -236,8 +256,40 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     return []
 
 
+def greadySearch(problem, heuristic=nullHeuristic):
+    """Search the node that has the lowest combined cost and heuristic first."""
+    node = getStartNode(problem)
+
+    def fn_total_cost_for_node(a_node):
+        return heuristic(a_node['STATE'], problem=problem)
+
+    frontier = util.PriorityQueueWithFunction(fn_total_cost_for_node)
+    frontier.push(node)
+    explored = set()
+
+    while not frontier.isEmpty():
+        node = frontier.pop()
+
+        if node['STATE'] in explored:
+            continue
+
+        explored.add(node['STATE'])
+
+        if problem.isGoalState(node['STATE']):
+            return getActionSequence(node)
+
+        successors = problem.expand(node['STATE'])
+
+        for sucessor in successors:
+            child_node = getChildNode(sucessor, node)
+            frontier.push(child_node)
+
+    return []
+
+
 # Abbreviations
 bfs = breadthFirstSearch
 dfs = depthFirstSearch
 astar = aStarSearch
-ucs = uniformCostSearch
+gready = greadySearch
+def ucs(problem): return aStarSearch(problem, nullHeuristic)
